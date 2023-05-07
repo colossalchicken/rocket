@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html{
+	overflow: hidden;
+	background: black;
+}
+*{
+transition: 1s;
+transform-origin: center;
+user-select: none;
+}
+enemy{
+display: block;
+position: absolute;
+animation: enemy 1s ease-in-out infinite;
+border-radius: 15px;
+}
+star{
+display: block;
+position: absolute;
+animation: star 1s ease-in infinite;
+border: none;
+border-left: .5px solid white;
+z-index: -1;
+}
+bullet{
+display: block;
+position: absolute;
+animation: bullet 3s ease 1;
+border-radius: 1px;
+z-index: -2;
+width: 5px;
+height: 5px;
+top: -100px;
+background: red;
+transition: .25s;
+}
+@keyframes enemy{
+0%{top: calc(0% - var(--w)); left:var(--ax);}
+50%{left:var(--bx);}
+100%{top: calc(100% + var(--w)); left:var(--cx);}
+}
+@keyframes star{
+0%{
+	top:0;
+	transform: scale(0,0);
+}
+10%{transform: scale(1,0);}
+100%{
+	top:100%;	
+}
+}
+@keyframes bullet{
+0%{
+	top: calc( 100% - 80px);
+}
+100%{
+	top: 0;	
+}
+}
+#rocket{
+	position: absolute;
+	bottom: 0;
+	left: 0px;
+	height: 80px;
+	z-index: 10;
+	transition: .5s;
+	transition-timing-function: ease-out;
+}
+#life{
+	background: red;
+	position: absolute;
+	top: 5%;
+	left: 50%;
+	height: 5px;
+	z-index: 10;
+	transform: translateX(-50%);
+	border-radius: 20px;
+	animation: down 1.5s ease-out 1;
+
+}
+#time{
+	position: absolute;
+	top: 1%;
+	right: 5%;
+	z-index: 10;
+	animation: down .5s ease-out 1;
+	color: white;
+
+}
+@keyframes down{
+	0%,10%{
+	width: 0;
+	top: -10px;
+	}
+	100%{
+	width: 80%
+	top: 5%;
+	}
+}
+</style>
+</head>
+<body>
+<img src=ship.gif id=rocket>
+<div id=life></div>
+<span id=time></span>
+<script>
+var rocket = document.getElementById("rocket")
+var life = document.getElementById("life");
+var time = document.getElementById("time");
+var currentTime = 0;
+setInterval(()=>{currentTime+=1;time.innerHTML=currentTime/100},10)
+life.style.width = '80%'
+const observer = new IntersectionObserver((entries, observer) => {
+  if (entries[0].intersectionRatio <= 0){
+  //entries[0].target.style['animation-play-state'] = 'paused'
+  let el = entries[0].target;
+  el.var.build();
+  el.style.animationName = "none";
+  void el.offsetWidth;
+  el.style.removeProperty('animation-name');
+  }
+});
+
+class enemy{
+	constructor(){
+		this.el = document.createElement("enemy")
+		document.body.appendChild(this.el)
+		this.build();
+		observer.observe(this.el);
+		//this.el.
+	}
+	build(){
+	let el = this.el;
+	el.hit = false;
+	el.style.removeProperty('transform')
+	el.style.removeProperty('opacity')
+	el.style.width = Math.random()*(window.innerWidth/10) + 'px'
+	el.style.setProperty('--w', el.style.width)
+	el.style.height = el.style.width;
+
+	el.style.background = ['red','darkblue','green','purple'][Math.floor(Math.random()*4)]
+	el.var = this;
+	['ax','bx','cx'].forEach(i=>{
+	el.style.setProperty('--' + i, `calc(${Math.random()*100}% - var(--w) /2)`)
+	})
+	el.style.animationDuration =  Math.random()*5 + 3 + 's'
+
+	}
+}
+
+class star{
+	constructor(){
+		this.el = document.createElement("star")
+		document.body.appendChild(this.el)
+		this.build();
+		observer.observe(this.el);
+		//this.el.
+	}
+	build(){
+	let el = this.el;
+
+	el.style.height = Math.random()*20 + 10 + 'px';
+	el.style.left = Math.random()*100 + '%';
+	el.style.animationDuration =  Math.random()*1 + 1 + 's'
+	}
+}
+class bullet{
+	constructor(x){
+		this.el = document.createElement("bullet")
+		this.el.style.left = x
+		document.body.appendChild(this.el)
+
+	}
+	check(){
+	let target = document.elementFromPoint(this.el.offsetLeft,this.el.offsetTop);
+	if(!!target && target.tagName == "ENEMY" && !target.hit && !!this.el.style.opacity == false ){
+	target.style.transform = 'scale(1.5)';
+	target.style.opacity = '0'
+	target.hit = true;
+	this.el.style.opacity = 0;
+	//this.el.remove();
+	}else if(this.el.offsetTop < 0){
+		this.el.remove();
+		bullets = bullets.splice(1);
+	}
+	}
+}
+
+Array.from({length: 10},()=>{
+	new enemy();
+})
+setInterval(()=>{new enemy()},5000);
+for(i=0;i<100;i++){
+setTimeout(()=>{
+	new star();
+},i*100);
+}
+bullets = []
+checkBullets = ()=>{
+window.requestAnimationFrame(checkBullets)
+//while(bullets.length > 0 && bullets.slice(-1)[0] == null)bullets.pop();
+document.querySelectorAll("enemy").forEach(e=>{
+	if(e.offsetTop+e.offsetHeight > rocket.offsetTop && e.offsetLeft + e.offsetWidth > rocket.offsetLeft && e.offsetLeft < rocket.offsetLeft + rocket.offsetWidth && !!e.style.opacity == false){
+		e.var.build();
+		e.style.animationName = "none";
+		void e.offsetWidth;
+		e.style.removeProperty('animation-name');
+		life.style.width = Number(life.style.width.split('%')[0]) - 10 + '%'
+		if(life.style.width == '0%'){
+		j = setTimeout(()=>{
+			alert("\t\t\t\tYou died!\t\t\ttime: " + time.innerHTML + "s")
+			delete j;
+			location.reload();
+		},1000)
+			
+		}
+	}
+})
+for(i of bullets)i.check();
+}
+checkBullets();
+
+rocket.style.left = "50%";
+shoot = false;
+d = 0;
+window.addEventListener('keydown', e=> {
+	if(e.key == "ArrowLeft")d = -5;
+	if(e.key == "ArrowRight")d = 5;
+	if(e.key == "ArrowUp" || e.key == " ")shoot = true;
+});
+window.addEventListener('keyup', e=> {
+	if(e.key == "ArrowUp" || e.key == " ")shoot = false
+	else d = 0;
+});
+
+setInterval(()=>{
+	let offsetLeft = Number(rocket.style.left.split('%')[0])
+	if(shoot)bullets.push(new bullet(rocket.offsetLeft/window.innerWidth*100 + '%'))
+	if(rocket.style.left != '0%' && d < 0){
+	        rocket.style.transform = "translateX(-50%) rotate(-20deg)"
+	        rocket.style.left = offsetLeft + d + "%";
+	}
+	else if(rocket.style.left != '100%' && d > 0){
+	        rocket.style.transform = "translateX(-50%) rotate(20deg)"
+	        rocket.style.left = offsetLeft + d + "%";
+	}else{
+	        rocket.style.transform = "translateX(-50%) rotate(0deg)"
+	}
+	
+},100);
+
+</script>
+</body>
+</html>
