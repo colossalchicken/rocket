@@ -211,7 +211,7 @@ document.querySelectorAll("enemy").forEach(e=>{
 		life.style.width = Number(life.style.width.split('%')[0]) - 10 + '%'
 		if(life.style.width == '0%'){
 		j = setTimeout(()=>{
-			alert("\t\t\t\tYou died!\t\t\ttime: " + time.innerHTML + "s")
+			alert("\t\t\t\GAME OVER\t\t\ttime: " + time.innerHTML + "s")
 			delete j;
 			location.reload();
 		},1000)
